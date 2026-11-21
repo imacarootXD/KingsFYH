@@ -1,3 +1,5 @@
+_Repository to be submitted for the Kings first year hackathon (KingsFYH)._
+
 # Rewind
 
 Rewind is a single-window Electron browser. It looks up addresses and top-level links in the Wayback Machine, opens captures from 1995–1999, and applies a retro stylesheet when it opens the live page.
