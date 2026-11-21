@@ -1,0 +1,10 @@
+/.idea/
+*.iml
+*.suo
+*.user
+*.sln.user
+publish/
+
+RetroExplorer/bin/
+RetroExplorer/obj/
+RetroExplorer/*.csproj.user
