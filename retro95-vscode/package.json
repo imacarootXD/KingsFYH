@@ -1,0 +1,29 @@
+{
+  "name": "retro-95",
+  "displayName": "Retro 95",
+  "description": "A teal desktop frame, square panels, silver toolbars, and a navy title bar.",
+  "version": "0.0.3",
+  "publisher": "retro95",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Themes"],
+  "contributes": {
+    "configurationDefaults": {
+      "window.commandCenter": false,
+      "workbench.layoutControl.enabled": false,
+      "workbench.activityBar.location": "top",
+      "workbench.sizeCustomizations": {
+        "panels.cornerRadius": 0,
+        "panels.spacing": 14
+      }
+    },
+    "themes": [
+      {
+        "label": "Retro 95",
+        "uiTheme": "vs-dark",
+        "path": "./themes/retro-95-color-theme.json"
+      }
+    ]
+  }
+}
