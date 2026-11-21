@@ -1,6 +1,8 @@
 const { httpURL, readReplay } = RewindURLs;
 const CDX_URL = 'https://web.archive.org/cdx/search/cdx';
 const REPLAY_ORIGIN = 'https://web.archive.org';
+// Rewind's "2000" mode never shows a capture newer than this year (inclusive).
+const ARCHIVE_CUTOFF = '2000';
 const timestampPattern = /^\d{14}$/;
 const INDEX_TIMEOUT = 12_000;
 const REPLAY_TIMEOUT = 5_000;
@@ -66,7 +68,8 @@ async function checkReplay(timestamp, url, hash, signal) {
 
 async function* findReplays(original, signal) {
   const deadline = AbortSignal.any([signal, AbortSignal.timeout(26_000)]);
-  const ranges = [{ from: '1995', to: '1995' }, {}];
+  // 1995 first, then everything up to the cutoff. Never fall through to later captures.
+  const ranges = [{ from: '1995', to: '1995' }, { to: ARCHIVE_CUTOFF }];
   const seen = new Set();
   const hash = new URL(original).hash;
 
