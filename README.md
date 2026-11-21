@@ -20,7 +20,6 @@ npm start
 3. Enter `https://www.iana.org/help/example-domains` for **Live page · 1995 style**. Use **Back** and **Forward** to move between the CSS capture and the styled live page.
 
 
-# The desktop application
 # Retro Explorer
 
 A retro-style Windows desktop file explorer built with C# and WinForms to throw you back. A proprietary file explorer and complete reskin for your desktop
