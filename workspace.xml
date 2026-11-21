@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74e7abc8-0c5c-4035-90f9-8e3634af20ba" name="Changes" comment="Merge branch 'main' of https://github.com/imacarootXD/KingsFYH&#10;&#10;# Conflicts:&#10;#&#9;.gitignore&#10;#&#9;README.md">
+      <change beforePath="$PROJECT_DIR$/RetroExplorer/RetroExplorer.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/RetroExplorer/RetroExplorer.csproj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/RetroExplorer/Win98SessionTheme.cs" beforeDir="false" afterPath="$PROJECT_DIR$/RetroExplorer/Win98SessionTheme.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,23 +30,23 @@
 }</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0021494780677977" />
-      <entry key="MS500" value="1.5353098501516005" />
-      <entry key="S2" value="4.196180154071811" />
-      <entry key="S5" value="8.474064556179062" />
-      <entry key="S10" value="13.8438498161104" />
-      <entry key="S30" value="24.591551010599673" />
-      <entry key="S60" value="29.824085563256226" />
-      <entry key="M2" value="33.279421509997945" />
-      <entry key="M5" value="40.62886708002329" />
-      <entry key="M10" value="62.201742907716955" />
-      <entry key="M15" value="91.91543729151846" />
-      <entry key="M30" value="183.46987968341804" />
-      <entry key="H1" value="305.25313108198463" />
-      <entry key="H2" value="416.32161523252813" />
-      <entry key="H4" value="494.9737005757254" />
-      <entry key="D1" value="578.0079479014604" />
-      <entry key="W1" value="594.2323641110243" />
+      <entry key="MS100" value="1.0004417552841929" />
+      <entry key="MS500" value="1.3579852901825693" />
+      <entry key="S2" value="3.1742148330671194" />
+      <entry key="S5" value="5.172135064678693" />
+      <entry key="S10" value="7.368287332496357" />
+      <entry key="S30" value="11.67857899450051" />
+      <entry key="S60" value="13.856204644160998" />
+      <entry key="M2" value="15.276806793387046" />
+      <entry key="M5" value="16.269443363657118" />
+      <entry key="M10" value="16.651854766946244" />
+      <entry key="M15" value="17.24362848893411" />
+      <entry key="M30" value="30.320671821299403" />
+      <entry key="H1" value="99.57552344460764" />
+      <entry key="H2" value="233.58439475009672" />
+      <entry key="H4" value="374.02093437085017" />
+      <entry key="D1" value="564.3773857848731" />
+      <entry key="W1" value="606.6281179419858" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -68,23 +68,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9480939451052536" />
-      <entry key="MS500" value="1.518854457822982" />
-      <entry key="S2" value="4.18464545452806" />
-      <entry key="S5" value="8.464493951563972" />
-      <entry key="S10" value="13.83596679446235" />
-      <entry key="S30" value="24.586855518559553" />
-      <entry key="S60" value="29.821232883679812" />
-      <entry key="M2" value="33.27782798009982" />
-      <entry key="M5" value="40.62808562826016" />
-      <entry key="M10" value="62.20114000839611" />
-      <entry key="M15" value="91.91482941679315" />
-      <entry key="M30" value="183.46922412515943" />
-      <entry key="H1" value="305.2525432341754" />
-      <entry key="H2" value="416.32119186146525" />
-      <entry key="H4" value="494.9734400751028" />
-      <entry key="D1" value="578.0078954693075" />
-      <entry key="W1" value="594.2323563620508" />
+      <entry key="MS100" value="0.9530582028609426" />
+      <entry key="MS500" value="1.3445014917404692" />
+      <entry key="S2" value="3.1660695210747973" />
+      <entry key="S5" value="5.166793442541995" />
+      <entry key="S10" value="7.364407719259431" />
+      <entry key="S30" value="11.676441476727378" />
+      <entry key="S60" value="13.854914088281136" />
+      <entry key="M2" value="15.276088097520697" />
+      <entry key="M5" value="16.26913519818128" />
+      <entry key="M10" value="16.6516967020123" />
+      <entry key="M15" value="17.243519149463868" />
+      <entry key="M30" value="30.320570304043645" />
+      <entry key="H1" value="99.57533745611235" />
+      <entry key="H2" value="233.58416101597678" />
+      <entry key="H4" value="374.02073973330334" />
+      <entry key="D1" value="564.377335008072" />
+      <entry key="W1" value="606.6281100926013" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -152,5 +152,9 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Merge branch 'main' of https://github.com/imacarootXD/KingsFYH&#10;&#10;# Conflicts:&#10;#&#9;.gitignore&#10;#&#9;README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge branch 'main' of https://github.com/imacarootXD/KingsFYH&#10;&#10;# Conflicts:&#10;#&#9;.gitignore&#10;#&#9;README.md" />
   </component>
 </project>
