@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Rewind</title>
+  <link rel="stylesheet" href="toolbar.css">
+  <script defer src="toolbar.js"></script>
+</head>
+<body>
+  <header class="toolbar" aria-label="Browser toolbar">
+    <div class="titlebar">
+      <span class="brand">Rewind</span>
+      <span id="status" class="status" data-kind="start" role="status">Ready</span>
+    </div>
+    <form id="navigation" class="navigation">
+      <button id="back" type="button" disabled><span class="arrow arrow-back" aria-hidden="true"></span>Back</button>
+      <button id="forward" type="button" disabled><span class="arrow" aria-hidden="true"></span>Forward</button>
+      <span class="divider" aria-hidden="true"></span>
+      <label for="address">Address</label>
+      <input id="address" type="text" inputmode="url" autocomplete="off" spellcheck="false" autofocus placeholder="Enter a web address">
+      <button class="go" type="submit">Go</button>
+    </form>
+  </header>
+
+  <main class="workspace">
+    <section id="start" class="panel" aria-labelledby="start-title">
+      <h1 id="start-title">Browse the ’90s</h1>
+      <p>Enter an address to open a capture from 1995–1999. If one is unavailable, Rewind opens the live page in 1995 style.</p>
+      <p class="demo">Try <button class="link" type="button" data-address="http://www.w3.org/">W3C’s 1997 homepage</button> or <button class="link" type="button" data-address="https://www.iana.org/help/example-domains">IANA’s Example Domains</button>.</p>
+    </section>
+    <section id="error" class="panel" aria-labelledby="error-title" hidden>
+      <h1 id="error-title">Could not open page</h1>
+      <p>Check the address or connection and try again.</p>
+    </section>
+  </main>
+</body>
+</html>

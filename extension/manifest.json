@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Rewind",
+  "version": "1.0.0",
+  "description": "A Win95-style browser session that automatically visits the earliest usable Wayback captures.",
+  "minimum_chrome_version": "126",
+  "permissions": ["storage", "scripting", "webNavigation", "webRequest", "tabs"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "worker.js" },
+  "action": { "default_title": "Start a Rewind session" }
+}

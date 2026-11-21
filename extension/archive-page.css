@@ -1,0 +1,31 @@
+#wm-ipp-base, #wm-ipp, #wm-ipp-print {
+  display: none !important;
+}
+
+img {
+  position: relative;
+}
+
+/* Chromium paints this pseudo-element when an image falls back to its alt text. */
+img::after {
+  content: attr(alt) !important;
+  position: absolute !important;
+  inset: 0 !important;
+  box-sizing: border-box !important;
+  padding: 3px 4px 0 19px !important;
+  border: 2px solid !important;
+  border-color: #808080 #fff #fff #808080 !important;
+  background:
+    linear-gradient(45deg, transparent 42%, #a00000 42% 58%, transparent 58%) 5px 5px / 8px 8px no-repeat,
+    linear-gradient(-45deg, transparent 42%, #a00000 42% 58%, transparent 58%) 5px 5px / 8px 8px no-repeat,
+    linear-gradient(#fff, #fff) 4px 4px / 10px 10px no-repeat,
+    linear-gradient(#808080, #808080) 3px 3px / 12px 12px no-repeat,
+    #c0c0c0 !important;
+  font: 11px/14px Tahoma, "MS Sans Serif", sans-serif !important;
+  color: #000 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  pointer-events: none !important;
+}
