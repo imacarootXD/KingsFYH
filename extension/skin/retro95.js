@@ -12,11 +12,17 @@
 //   (<rewind-toolbar>, appended to <html> by page.js) replaces them.
 // - Pinned page elements are pushed below that 88px toolbar.
 // - The toolbar is never scanned, tagged or restyled.
+// - worker.js injects this at navigation commit, before the page's first paint
+//   (retro95.css is inserted at the same moment). So the class goes on <html>
+//   as the very first statement, and everything heavy (scans, the contrast
+//   pass, observers, timers) waits until the DOM exists.
 (() => {
+  // Switches the skin on. Idempotent, so it is fine before the double-injection guard.
+  document.documentElement?.classList.add('retro95');
   if (globalThis.__retro95Loaded) return;
   globalThis.__retro95Loaded = true;
 
-  const root = document.documentElement;
+  let root = document.documentElement; // null only if injected before the parser created <html>
   // Rewind's toolbar host. It is a child of <html>, outside <body>, so the
   // scans below never reach it; the explicit checks cover elementsFromPoint,
   // which does return it (it is a fixed layer over the top 88px).
@@ -25,18 +31,46 @@
   // Google Search gets a few extra fixes; retro95.css scopes them to this marker
   // so nothing changes on other sites.
   const onGoogle = /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(location.hostname);
-  if (onGoogle) root.setAttribute('data-retro95-site', 'google');
 
-  function apply(on) {
-    root.classList.toggle('retro95', on === true);
-    if (on === true) whenBody(() => { watchDom(true); queueContrast(); });
-    else watchDom(false);
-    scanPage();
+  function apply() {
+    root = document.documentElement;
+    if (!root) { // injected before <html> exists: nothing can paint yet, so wait for it
+      new MutationObserver((_, observer) => {
+        if (!document.documentElement) return;
+        observer.disconnect();
+        apply();
+      }).observe(document, { childList: true });
+      return;
+    }
+    root.classList.add('retro95');
+    if (onGoogle) root.setAttribute('data-retro95-site', 'google');
+    console.debug('[Rewind skin] applied', document.readyState);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startScans, { once: true });
+    else startScans();
   }
 
-  function whenBody(fn) {
-    if (document.body) fn();
-    else document.addEventListener('DOMContentLoaded', fn, { once: true });
+  // Everything heavy: runs once the DOM exists, never at injection time.
+  let scansStarted = false;
+  function startScans() {
+    if (scansStarted) return;
+    scansStarted = true;
+    watchDom(true);
+    queueContrast();
+    scanPage();
+    // Re-scan every second (late banners, bars wiped by the site) and 150ms after scrolling/resizing.
+    setInterval(scanPage, 1000);
+    addEventListener('scroll', queueScan, { passive: true, capture: true });
+    addEventListener('resize', queueScan, { passive: true });
+    // Contrast pass: after load, and 300ms after scrolling stops (new things come into view).
+    addEventListener('load', () => queueContrast(0));
+    addEventListener('scroll', () => {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(() => queueContrast(0), 300);
+    }, { passive: true, capture: true });
+    // Pictures finishing loading (lazy images) can put existing text on a photo.
+    document.addEventListener('load', (e) => {
+      if (e.target && MEDIA.test(e.target.tagName) && root.classList.contains('retro95')) { mediaGen++; queueContrast(); }
+    }, true);
   }
 
   // CSS can't select by computed position or "has no text", so this scan tags
@@ -88,18 +122,12 @@
   }
 
 
-  // Re-scan (no-op while the skin is off): on load, every second (late
-  // banners, bars wiped by the site), and 150ms after scrolling/resizing.
-  document.addEventListener('DOMContentLoaded', scanPage);
-  setInterval(scanPage, 1000);
   let scanQueued = false;
   function queueScan() {
     if (scanQueued) return;
     scanQueued = true;
     setTimeout(() => { scanQueued = false; scanPage(); }, 150);
   }
-  addEventListener('scroll', queueScan, { passive: true, capture: true });
-  addEventListener('resize', queueScan, { passive: true });
 
   // ---------- Contrast pass ----------
   // The skin forces black text, so anything still dark underneath it is
@@ -305,10 +333,6 @@
     }
     queueContrast();
   });
-  // Pictures finishing loading (lazy images) can put existing text on a photo.
-  document.addEventListener('load', (e) => {
-    if (e.target && MEDIA.test(e.target.tagName) && root.classList.contains('retro95')) { mediaGen++; queueContrast(); }
-  }, true);
   function watchDom(on) {
     domObserver.disconnect();
     if (on && document.body) {
@@ -316,12 +340,7 @@
         attributes: true, attributeFilter: ['class', 'style', 'src', 'hidden'] });
     }
   }
-  addEventListener('load', () => queueContrast(0));
   let scrollEndTimer = null;
-  addEventListener('scroll', () => { // new things come into view
-    clearTimeout(scrollEndTimer);
-    scrollEndTimer = setTimeout(() => queueContrast(0), 300);
-  }, { passive: true, capture: true });
 
-  apply(true); // injected = on, immediately, no animation
+  apply();
 })();

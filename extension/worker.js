@@ -21,6 +21,12 @@ const ready = Promise.all([
     if (isMode(rewindMode)) mode = rewindMode;
   }),
 ]);
+// True once sessions and mode are in memory. After that, committed() can decide about the
+// skin synchronously; it only has to wait when the worker has just woken up.
+let settled = false;
+void ready.then(() => { settled = true; });
+// tabId -> documentId that already got the skin at commit time (see committed()).
+const skinned = new Map();
 const toolbarCSS = fetch(chrome.runtime.getURL('toolbar.css')).then(response => response.text());
 const scripts = ['urls.js', 'ui.js', 'page.js'];
 
@@ -95,18 +101,44 @@ function rememberTab(tabId, session, page, historyTraversal) {
   publish(tabId);
 }
 
+// The Retro 95 skin goes only on live pages (Present mode and "not online in 2000" fallbacks),
+// never on archive captures. Both calls are issued in the same turn, with no await between
+// them, so the stylesheet and the class that activates it land together. retro95.js guards
+// against a second run.
+function injectSkin(tabId, documentId) {
+  skinned.set(tabId, documentId);
+  const target = documentId ? { tabId, documentIds: [documentId] } : { tabId };
+  return Promise.all([
+    chrome.scripting.insertCSS({ target, files: ['skin/retro95.css'], origin: 'USER' }),
+    chrome.scripting.executeScript({ target, files: ['skin/retro95.js'], injectImmediately: true }),
+  ]).catch(() => {
+    if (skinned.get(tabId) === documentId) skinned.delete(tabId);
+  });
+}
+
+// True for a main-frame commit that must be skinned before its first paint: a Rewind tab opening
+// an http(s) page that is not an archive replay (this also excludes home.html, a
+// chrome-extension:// page), in Present mode or as the live page of an archive-mode fallback.
+// Synchronous on purpose: it only reads in-memory state.
+function shouldSkin(details) {
+  const session = sessions.get(details.tabId);
+  const url = session && RewindURLs.httpURL(details.url); // (archive.js already declares httpURL globally)
+  if (!url || url.host === 'web.archive.org') return false;
+  if (mode === 'present') return true;
+  // Archive mode: the live load that follows "no capture up to the cutoff" is a visit with no
+  // capture timestamp. Back/Forward/reload of a live page recorded earlier is skinned too.
+  const visit = active.get(details.tabId)?.visit;
+  if (visit && !visit.timestamp && matchesVisit(details, visit)) return true;
+  return session.entries.findLast(item => item.render === details.url)?.kind === 'live';
+}
+
+// End of navigate(): the toolbar. Skinned pages were already skinned at commit; the backstop
+// below only catches a live page that was not known to be live then (a page that navigated
+// itself in archive mode and turned out to have no capture).
 async function inject(tabId, documentId, kind) {
   const target = documentId ? { tabId, documentIds: [documentId] } : { tabId };
   try {
-    // The Retro 95 skin goes only on live pages (Present mode and "not online in 2000"
-    // fallbacks), never on archive captures. It goes first and immediately: a normal
-    // executeScript waits for the page to load, and by then Chrome has already scrolled to
-    // a #fragment in the unskinned layout, which the skin then reshapes. retro95.js guards
-    // against a second run.
-    if (kind === 'live') {
-      await chrome.scripting.insertCSS({ target, files: ['skin/retro95.css'], origin: 'USER' });
-      await chrome.scripting.executeScript({ target, files: ['skin/retro95.js'], injectImmediately: true });
-    }
+    if (kind === 'live' && !(documentId && skinned.get(tabId) === documentId)) await injectSkin(tabId, documentId);
     await chrome.scripting.insertCSS({ target, files: ['page-layout.css'], origin: 'USER' });
     if (kind === 'archive') {
       await chrome.scripting.insertCSS({ target, files: ['archive-page.css'], origin: 'USER' });
@@ -257,6 +289,10 @@ function finishReplay(details, pending) {
 
 async function committed(details) {
   if (details.frameId !== 0 || !details.documentId) return;
+  if (!settled) await ready; // only right after the worker woke up
+  // Skin first, before any other await: the page has not painted yet, so the skin is in place
+  // for its first frame. Waiting for navigate() (tabs.get, rememberTab, ...) would paint plain.
+  if (shouldSkin(details)) void injectSkin(details.tabId, details.documentId);
   await ready;
   const tabId = details.tabId;
   const session = sessions.get(tabId);
@@ -391,6 +427,7 @@ async function publishFullscreen(window) {
 chrome.windows.onBoundsChanged.addListener(window => void publishFullscreen(window).catch(() => {}));
 
 chrome.tabs.onRemoved.addListener(async tabId => {
+  skinned.delete(tabId);
   await ready;
   if (!sessions.delete(tabId)) return;
   stopRun(tabId);
