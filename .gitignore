@@ -8,3 +8,7 @@ publish/
 RetroExplorer/bin/
 RetroExplorer/obj/
 RetroExplorer/*.csproj.user
+node_modules/
+.npm-cache/
+.DS_Store
+.idea/

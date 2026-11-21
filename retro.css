@@ -1,0 +1,40 @@
+html, body {
+  color: #211c17 !important;
+  background: #fff8df !important;
+}
+
+:where(body, body *) {
+  font-family: 'Times New Roman', Times, serif !important;
+}
+
+:where(pre, code, kbd, samp, pre *, code *) {
+  font-family: 'Courier New', monospace !important;
+}
+
+:where(main, header, footer, nav, aside, section, article, div) {
+  color: #211c17 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:where(a[href], a[href] *) {
+  color: #0000ee !important;
+}
+
+:where(a[href]) {
+  text-decoration: underline !important;
+}
+
+:where(a[href]:visited) {
+  color: #551a8b !important;
+}
+
+:where(button, input[type='button'], input[type='submit'], input[type='reset'], [role='button']) {
+  color: #111 !important;
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-color: #fff #5b5b5b #5b5b5b #fff !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Retro 95</title>
+  <style>
+    body { width: 230px; margin: 0; padding: 8px; background: #c0c0c0; font: 12px Tahoma, Arial, sans-serif; }
+    button, select { font: inherit; }
+    [hidden] { display: none !important; }
+    #state { font-weight: bold; }
+    .row { display: flex; gap: 6px; align-items: center; margin-top: 6px; min-height: 22px; }
+    #status { margin-top: 6px; min-height: 2.6em; line-height: 1.3; }
+  </style>
+</head>
+<body>
+  <label><input type="checkbox" id="retro"> Retro mode: <span id="state">...</span></label>
+  <hr>
+  <b>Time travel</b>
+  <div class="row">
+    <label for="year" id="yearLabel">Year</label>
+    <select id="year"></select>
+    <button id="go" disabled>Time travel</button>
+  </div>
+  <div id="status"></div>
+  <button id="retry" hidden>Retry</button>
+  <script src="popup.js"></script>
+</body>
+</html>

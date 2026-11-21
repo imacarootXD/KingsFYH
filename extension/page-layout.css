@@ -1,0 +1,4 @@
+html:has(> rewind-toolbar) {
+  padding-top: 88px !important;
+  scroll-padding-top: 88px !important;
+}
