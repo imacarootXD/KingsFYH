@@ -1,0 +1,402 @@
+/* Retro 95 skin. Every rule is scoped under html.retro95 so the skin is inert
+   until content.js adds that class to <html>. Sites fight back, hence the
+   !important everywhere. Bevel recipe: a 1px border for the outer edge plus
+   an inset box-shadow for the inner edge = classic 2px bevel. */
+
+/* ---------- Desktop and the main "window" ---------- */
+html.retro95 {
+  background: #008080 !important;
+  color-scheme: light !important;
+  scrollbar-color: auto !important; /* else ::-webkit-scrollbar is ignored */
+  scrollbar-width: auto !important;
+  overflow-x: hidden !important; /* body margins + 100vw elements = sideways scroll */
+  scroll-padding: 30px 0 36px !important; /* anchor jumps land below the title bar */
+}
+html.retro95 body {
+  background: transparent !important; /* the grey comes from body::before */
+  color: #000 !important;
+  font: 13px/1.35 Tahoma, "MS Sans Serif", Arial, sans-serif !important;
+  margin: 0 8px !important;
+  padding: 28px 8px 36px !important; /* room for title bar + taskbar */
+  scrollbar-color: auto !important;
+  scrollbar-width: auto !important;
+}
+/* The grey window face is a fixed layer behind the page, not the body's own
+   background: many sites (BBC) have a 100vh wrapper that content overflows,
+   so a body background would stop after one screen. */
+html.retro95 body::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 8px !important;
+  /* sites style body::before too (apple.com sets a height) */
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background: #c0c0c0 !important;
+  border: 1px solid !important;
+  border-color: #dfdfdf #000 #000 #dfdfdf !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080 !important;
+}
+
+/* ---------- No modern effects ---------- */
+html.retro95 *, html.retro95 *::before, html.retro95 *::after {
+  color-scheme: light !important; /* no dark form controls/scrollbars inside dark-themed panels */
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* Gradients and hero backgrounds off. Empty elements and icon/logo classes
+   keep their background images, because that is how sites draw icons. */
+html.retro95 body *:not(:empty, [class*="icon" i], [class*="logo" i]),
+html.retro95 body :not([class*="icon" i], [class*="logo" i])::before,
+html.retro95 body :not([class*="icon" i], [class*="logo" i])::after {
+  background-image: none !important;
+}
+
+/* ---------- Flat grey world, black text ----------
+   Makes every layer show the grey body, which also fixes dark-mode sites.
+   Inline backgrounds (colour swatches, avatars) and icons (often drawn as
+   background-color + mask-image) are left alone. */
+html.retro95 body *:not([style*="background"], [class*="icon" i]) {
+  background-color: transparent !important;
+}
+html.retro95 body * {
+  color: #000 !important;
+  -webkit-text-fill-color: currentColor !important; /* undo gradient text */
+}
+/* Things that float over content need an opaque face (incl. cookie banners). */
+html.retro95 body :is(header, nav, dialog, [role="banner"], [role="navigation"],
+  [role="dialog"], [role="alertdialog"], [aria-modal="true"], [role="menu"],
+  [role="listbox"], [role="tooltip"], [class*="dropdown" i], [class*="popover" i],
+  [class*="sticky" i], [id*="cookie" i], [class*="cookie" i], [id*="consent" i],
+  [class*="consent" i], [data-retro95-float]) {
+  background-color: #c0c0c0 !important;
+}
+/* Keep the site's own pinned bars clear of our title bar (26px) and taskbar
+   (32px). content.js tags them with the edge they're pinned to. */
+html.retro95 body [data-retro95-float="fixed-top"] { margin-top: 26px !important; }
+html.retro95 body [data-retro95-float="sticky-top"] { top: 26px !important; }
+html.retro95 body [data-retro95-float="bottom"] { margin-bottom: 32px !important; }
+html.retro95 body [data-retro95-float="sticky-bottom"] { bottom: 32px !important; }
+html.retro95 body [data-retro95-float="both"] { margin-top: 26px !important; margin-bottom: 32px !important; }
+html.retro95 body :is(dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"],
+  [role="menu"], [role="listbox"]) {
+  border: 1px solid !important;
+  border-color: #dfdfdf #000 #000 #dfdfdf !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080 !important;
+}
+
+/* ---------- Fonts ---------- */
+/* Skip icon fonts and code, or icons turn into words/boxes.
+   (Keep each compound selector on one line: a line break = descendant combinator.) */
+html.retro95 body *:not(i, code, pre, kbd, samp, tt, [class*="icon" i], [class*="fa-"], [class*="material" i], [class*="symbol" i], [class*="glyph" i]) {
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif !important;
+  letter-spacing: normal !important;
+}
+html.retro95 body :is(p, li, td, th, dd, dt, label, blockquote, figcaption,
+  input, button, select, textarea) {
+  font-size: 13px !important;
+}
+html.retro95 body :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: bold !important;
+  line-height: 1.25 !important;
+}
+html.retro95 body h1 { font-size: 22px !important; }
+html.retro95 body h2 { font-size: 18px !important; }
+html.retro95 body h3 { font-size: 15px !important; }
+html.retro95 body :is(h4, h5, h6) { font-size: 13px !important; }
+
+/* ---------- Links ---------- */
+html.retro95 body a { color: #0000ee !important; text-decoration: underline !important; }
+html.retro95 body a * { color: #0000ee !important; }
+html.retro95 body a:visited, html.retro95 body a:visited * { color: #551a8b !important; }
+
+/* ---------- Buttons: raised, pressed on :active ----------
+   Not on buttons with no text (data-retro95-bare, set by content.js): sites
+   use those as invisible icon/menu triggers (apple.com's nav). */
+html.retro95 body :is(button, input[type="button"], input[type="submit"],
+  input[type="reset"], [role="button"]):not([data-retro95-bare]) {
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+  text-decoration: none !important;
+  border: 1px solid !important;
+  border-color: #fff #000 #000 #fff !important;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf !important;
+}
+html.retro95 body [role="button"] * { color: #000 !important; }
+html.retro95 body :is(button, input[type="button"], input[type="submit"],
+  input[type="reset"], [role="button"]):not([data-retro95-bare]):active {
+  border-color: #000 #fff #fff #000 !important;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #dfdfdf !important;
+}
+
+/* ---------- Text fields and search boxes: white, sunken, no fades ---------- */
+html.retro95 body :is(textarea, select, [role="searchbox"], [contenteditable="true"], [contenteditable=""],
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="reset"], [type="image"], [type="file"], [type="hidden"]),
+  #r95#r95) {
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important;
+  caret-color: #000 !important;
+  opacity: 1 !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  border: 1px solid !important;
+  border-color: #808080 #fff #fff #808080 !important;
+  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf !important;
+}
+html.retro95 body :is(input, textarea, [role="searchbox"])::placeholder {
+  color: #808080 !important;
+  -webkit-text-fill-color: #808080 !important;
+  opacity: 1 !important;
+}
+
+/* ---------- Contrast fixes (tags set by content.js's contrast pass) ----------
+   :is(..., #r95#r95) never matches the ids; it only lifts these rules above
+   a site's own "#id .x {... !important}" rules, which is usually why a panel
+   stayed dark in the first place. */
+/* Fades: gradient backgrounds/masks on overlay layers (and their ::before/::after). */
+html.retro95 body :is([data-retro95-flat], #r95#r95),
+html.retro95 body :is([data-retro95-flat], #r95#r95)::before,
+html.retro95 body :is([data-retro95-flat], #r95#r95)::after {
+  background-image: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+/* Dark panels with text (e.g. an AI answer box) become grey raised panels. */
+html.retro95 body :is([data-retro95-panel], #r95#r95) {
+  background-color: #c0c0c0 !important;
+  background-image: none !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080 !important;
+}
+html.retro95 body :is([data-retro95-panel], #r95#r95),
+html.retro95 body :is([data-retro95-panel], #r95#r95) :not(a, a *) {
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important;
+}
+html.retro95 body :is([data-retro95-panel], #r95#r95) :is(a, a *) { color: #0000ee !important; -webkit-text-fill-color: #0000ee !important; }
+/* Text sitting on a photo: put it on a solid grey chip. Blocks shrink to
+   their text and keep their alignment (value = inline|start|center|end). */
+html.retro95 body :is([data-retro95-chip], #r95#r95) {
+  background-color: #c0c0c0 !important;
+  background-image: none !important;
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important;
+  opacity: 1 !important;
+  border: 2px solid !important;
+  border-color: #fff #808080 #808080 #fff !important;
+  padding: 1px 5px !important;
+  box-decoration-break: clone;
+}
+html.retro95 body :is([data-retro95-chip="start"], [data-retro95-chip="center"], [data-retro95-chip="end"], #r95#r95) {
+  width: fit-content !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+html.retro95 body :is([data-retro95-chip="center"], #r95#r95) { margin-left: auto !important; margin-right: auto !important; }
+html.retro95 body :is([data-retro95-chip="end"], #r95#r95) { margin-left: auto !important; }
+html.retro95 body :is(input[type="checkbox"], input[type="radio"], input[type="range"], progress) {
+  accent-color: #000080 !important;
+}
+
+/* ---------- Tables, cards, panels, rules ---------- */
+/* Only data tables (ones with header cells). Old sites nest layout tables
+   10 deep and would turn into a grid of boxes. */
+html.retro95 body table:has(> thead, > tbody > tr > th) { border: 2px solid #808080 !important; }
+html.retro95 body th {
+  background-color: #c0c0c0 !important;
+  border: 1px solid !important;
+  border-color: #fff #808080 #808080 #fff !important;
+}
+/* Exact class names only: substring matches hit generated names like
+   "PromoCardWrapper" and nest borders 3 deep on modern sites. */
+html.retro95 body :is(fieldset, .card, .panel, .widget, .box) {
+  border: 2px solid #808080 !important;
+}
+html.retro95 body hr {
+  height: 0 !important;
+  border: 0 !important;
+  border-top: 1px solid #808080 !important;
+  border-bottom: 1px solid #fff !important;
+  background: none !important;
+}
+
+/* ---------- Images and video: low-colour, chunky ---------- */
+html.retro95 body :is(img, video) {
+  image-rendering: pixelated !important;
+  filter: contrast(1.1) saturate(0.7) !important;
+}
+
+/* ---------- Selection and focus ---------- */
+html.retro95 ::selection {
+  background: #000080 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+html.retro95 body :focus-visible { outline: 1px dotted #000 !important; outline-offset: 1px !important; }
+
+/* ---------- Targeted fixes for the demo sites ---------- */
+/* Sites move focus to headings/regions from code (BBC's cookie banner title):
+   no dotted focus box on things you can't tab to. */
+html.retro95 body [tabindex="-1"]:focus-visible { outline: none !important; }
+/* Wikipedia "Appearance" options are radio buttons drawn as circles: keep them
+   round (the skin squares everything else; real 95 radio buttons were round). */
+html.retro95 body .cdx-radio__icon,
+html.retro95 body .cdx-radio__icon::before { border-radius: 50% !important; }
+/* Wikipedia 2001-2004 (archived): the logo column is pinned to the top of the
+   page with position:absolute, which body padding doesn't move. */
+html.retro95 body #quickbar { margin-top: 26px !important; }
+/* Old sites (BBC News 2003-2005) draw separators with stretched white spacer
+   GIFs: invisible on white, white bars on grey. Hide them, keep the space. */
+html.retro95 body img:is([src*="ffffff.gif" i], [src*="white.gif" i], [src*="/blank_white" i]) { visibility: hidden !important; }
+/* Wikipedia's bookmark "new" dot (and its pulse ring) is round, not a square. */
+html.retro95 body #ca-bookmark::before,
+html.retro95 body #ca-bookmark::after { border-radius: 50% !important; }
+
+/* Dark icon buttons (data-retro95-iconbtn, any site) and Google's "+" in the
+   "Ask anything" box: grey bevelled button, black icon. */
+html.retro95[data-retro95-site="google"] body :is(button, [role="button"])[aria-label^="Add files" i],
+html.retro95 body :is([data-retro95-iconbtn], #r95#r95) {
+  background-color: #c0c0c0 !important;
+  background-image: none !important;
+  color: #000 !important;
+  border: 1px solid !important;
+  border-color: #fff #000 #000 #fff !important;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf !important;
+}
+html.retro95[data-retro95-site="google"] body :is(button, [role="button"])[aria-label^="Add files" i] *,
+html.retro95 body :is([data-retro95-iconbtn], #r95#r95) * {
+  background-color: transparent !important; /* inner circles/ripples drew the dark disc */
+  color: #000 !important;
+}
+html.retro95[data-retro95-site="google"] body :is(button, [role="button"])[aria-label^="Add files" i] svg :is([fill]:not([fill="none"]), [style*="fill"]),
+html.retro95 body :is([data-retro95-iconbtn], #r95#r95) svg :is([fill]:not([fill="none"]), [style*="fill"]) { fill: #000 !important; }
+html.retro95[data-retro95-site="google"] body :is(button, [role="button"])[aria-label^="Add files" i] svg [stroke]:not([stroke="none"]),
+html.retro95 body :is([data-retro95-iconbtn], #r95#r95) svg [stroke]:not([stroke="none"]) { stroke: #000 !important; }
+html.retro95[data-retro95-site="google"] body :is(button, [role="button"])[aria-label^="Add files" i]:active,
+html.retro95 body :is([data-retro95-iconbtn], #r95#r95):active {
+  border-color: #000 #fff #fff #000 !important;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #dfdfdf !important;
+}
+
+/* ---------- Google Search ----------
+   Only on www.google.* (content.js sets data-retro95-site="google").
+   Selectors use ids, ARIA roles/labels, form names and page structure, never
+   Google's scrambled class names, which change without notice. */
+
+/* Tab row (All, Images, News, AI Mode...): one etched Windows 95 line, grey
+   over white, the full width of the results column. Drawn on the box that
+   holds the tab bar ([role=navigation] with a [role=list] of tabs) as a 2px
+   border-image stretched sideways, then clipped at #cnt, so it is full width
+   even where the tab bar itself is narrow (AI Mode). */
+html.retro95[data-retro95-site="google"] body #cnt { overflow-x: clip !important; }
+html.retro95[data-retro95-site="google"] body #cnt div:has(> [role="navigation"] [role="list"] [role="listitem"]) {
+  border-bottom: 2px solid #808080 !important;
+  border-image: linear-gradient(#808080 50%, #fff 50%) 0 0 100% 0 / 0 0 2px 0 / 0 100vw !important;
+  box-shadow: none !important;
+}
+/* Wrappers that would clip that line (tagged by content.js; AI Mode). */
+html.retro95[data-retro95-site="google"] body #cnt [data-retro95-unclip] { overflow: visible !important; contain: none !important; }
+/* Google's own divider under the tabs, and any second (collapsed) tab-bar
+   box right below it, tagged by content.js by position. Wins over the line
+   rule above (#r95#r95) so only one line is drawn. */
+html.retro95[data-retro95-site="google"] body :is([data-retro95-oldline], #r95#r95) {
+  border-bottom-color: transparent !important;
+  border-image: none !important;
+}
+/* Active tab (its link is aria-disabled): underline in black; Google's
+   dark-theme near-white one barely shows on grey. */
+html.retro95[data-retro95-site="google"] body #cnt [role="listitem"]:has(a[aria-disabled="true"]) * { border-bottom-color: #000 !important; }
+
+/* Search box: one sunken white field. Google nests the box: form > box (its
+   outer frame) > wrapper (20px left padding, holds the clear/voice/image
+   buttons) > wrapper > textarea[name=q]. Frame the box, drop the wrapper's
+   padding and the field's own frame, so text and icons share one field. */
+html.retro95[data-retro95-site="google"] body form[role="search"] div:has(> div > div > :is(textarea, input)[name="q"]) {
+  background: #fff !important;
+  border: 1px solid !important;
+  border-color: #808080 #fff #fff #808080 !important;
+  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+html.retro95[data-retro95-site="google"] body form[role="search"] div:has(> div > :is(textarea, input)[name="q"]) { padding-left: 6px !important; }
+html.retro95[data-retro95-site="google"] body form[role="search"] :is(textarea, input, #r95#r95#r95)[name="q"] {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Logo: in Google's dark theme it is near-white (invisible on grey). */
+@media (prefers-color-scheme: dark) {
+  html.retro95[data-retro95-site="google"] body :is(#logo, a[aria-label="Go to Google Home"]) svg { filter: brightness(0) !important; }
+  html.retro95[data-retro95-site="google"] body :is(#logo, a[aria-label="Go to Google Home"]) img { filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000) !important; }
+}
+/* Other icons left near-white by the dark theme (tagged by content.js). */
+html.retro95[data-retro95-site="google"] body [data-retro95-lightfill] { fill: #000 !important; }
+html.retro95[data-retro95-site="google"] body [data-retro95-lightstroke] { stroke: #000 !important; }
+
+/* AI Mode: the small "G" in the left rail draws its colours with a gradient
+   inside an SVG <foreignObject>; with gradients removed only a blue sliver is
+   left. Hide that leftover graphic (the link itself stays). */
+html.retro95[data-retro95-site="google"] body :is(a[aria-label="Go to Google Home"], :has(> a[aria-label="Go to Google Home"])) svg:has(foreignObject) { visibility: hidden !important; }
+
+/* ---------- Scrollbars: square, grey, bevelled, with arrows ---------- */
+html.retro95::-webkit-scrollbar, html.retro95 ::-webkit-scrollbar {
+  width: 16px !important;
+  height: 16px !important;
+  background: #c0c0c0 !important;
+}
+html.retro95::-webkit-scrollbar-track, html.retro95 ::-webkit-scrollbar-track {
+  /* the classic 1px checkerboard */
+  background: repeating-conic-gradient(#c0c0c0 0 25%, #fff 0 50%) 0 0 / 2px 2px !important;
+}
+html.retro95::-webkit-scrollbar-corner, html.retro95 ::-webkit-scrollbar-corner {
+  background: #c0c0c0 !important;
+}
+html.retro95::-webkit-scrollbar-thumb, html.retro95 ::-webkit-scrollbar-thumb,
+html.retro95::-webkit-scrollbar-button:single-button,
+html.retro95 ::-webkit-scrollbar-button:single-button {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  background-color: #c0c0c0 !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: 1px solid !important;
+  border-color: #dfdfdf #000 #000 #dfdfdf !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080 !important;
+}
+html.retro95::-webkit-scrollbar-button:single-button:active,
+html.retro95 ::-webkit-scrollbar-button:single-button:active {
+  border-color: #808080 !important;
+  box-shadow: none !important;
+}
+/* Arrow glyphs: tiny black triangles drawn as inline SVG. */
+html.retro95::-webkit-scrollbar-button:single-button:vertical:decrement,
+html.retro95 ::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M1 6h6L4 3z'/></svg>") !important;
+}
+html.retro95::-webkit-scrollbar-button:single-button:vertical:increment,
+html.retro95 ::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M1 3h6L4 6z'/></svg>") !important;
+}
+html.retro95::-webkit-scrollbar-button:single-button:horizontal:decrement,
+html.retro95 ::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M6 1v6L3 4z'/></svg>") !important;
+}
+html.retro95::-webkit-scrollbar-button:single-button:horizontal:increment,
+html.retro95 ::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M3 1v6l3-3z'/></svg>") !important;
+}

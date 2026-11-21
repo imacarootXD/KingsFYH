@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Retro 95",
+  "version": "0.1.0",
+  "description": "One click turns any website into a 1995-style desktop.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://archive.org/*", "https://web.archive.org/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Retro 95",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["retro.css"],
+      "run_at": "document_start"
+    }
+  ]
+}
