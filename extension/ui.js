@@ -7,8 +7,8 @@
         <strong class="brand">Rewind</strong>
         <div class="titlebar-actions">
           <div class="mode-toggle" role="group" aria-label="Browsing mode">
-            <button type="button" data-mode="archive" aria-pressed="true" aria-label="Back to 2000" title="Back to 2000: real pages from the archive"><span class="mode-year">2000</span><span class="mode-year-short" aria-hidden="true">00</span></button>
-            <button type="button" data-mode="live" aria-pressed="false" aria-label="2026 in 2000" title="2026 in 2000: today's web, retro style"><span class="mode-year">2026</span><span class="mode-year-short" aria-hidden="true">26</span></button>
+            <button type="button" data-mode="archive" aria-pressed="true" aria-label="2000" title="2000: real pages from the archive"><span class="mode-label">2000</span><span class="mode-label-short" aria-hidden="true">00</span></button>
+            <button type="button" data-mode="present" aria-pressed="false" aria-label="Present" title="Present: today's web in a retro skin"><span class="mode-label">Present</span><span class="mode-label-short" aria-hidden="true">Now</span></button>
           </div>
           <span id="status" class="status" data-kind="start" role="status"><span class="status-text">Ready</span></span>
           <button id="fullscreen" class="fullscreen-toggle" type="button" aria-pressed="false" aria-label="Toggle full screen" title="Full screen (Esc to exit)">⛶</button>
@@ -138,10 +138,11 @@
       const changed = state.original !== next.original || state.kind !== next.kind || state.waiting !== next.waiting;
       if (changed && !next.waiting) address.value = next.original ?? '';
       state = next;
-      const mode = next.mode === 'live' ? 'live' : 'archive';
+      // A worker that predates the mode contract sends no mode: treat that as archive.
+      const mode = next.mode === 'present' ? 'present' : 'archive';
       for (const button of modeButtons) button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
       statusText.textContent = next.status;
-      status.dataset.kind = mode === 'live' ? 'live' : next.waiting ? 'loading' : next.kind ?? 'start';
+      status.dataset.kind = mode === 'present' ? 'live' : next.waiting ? 'loading' : next.kind ?? 'start';
       status.toggleAttribute('data-fallback', next.fallback === true);
       back.disabled = !next.canGoBack;
       forward.disabled = !next.canGoForward;
@@ -166,12 +167,6 @@
           fullscreenButton.getAttribute('aria-pressed') !== 'true') return;
       event.preventDefault();
       void toggleFullscreen();
-    });
-    chrome.storage.onChanged.addListener((changes, area) => {
-      const mode = changes.rewindMode?.newValue;
-      if (area === 'local' && (mode === 'archive' || mode === 'live') && mode !== state.mode) {
-        update({ ...state, mode });
-      }
     });
     for (const button of modeButtons) {
       button.addEventListener('click', async () => {

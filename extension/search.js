@@ -61,7 +61,7 @@ async function searchWeb(query, signal) {
     results.push({
       url: resultURL.href,
       title: searchText(row.Title) || resultURL.host,
-      description: searchText(row.Description) || searchText(row.Snippet),
+      description: searchText(row.Snippet) || searchText(row.Description),
     });
   }
   return { results: rankResults(results, query), provider: 'Wiby', source: WEB_SEARCH_SOURCE };

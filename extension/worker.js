@@ -4,11 +4,29 @@ const { addressURL, destination, withoutHash } = RewindURLs;
 const homeURL = chrome.runtime.getURL('home.html');
 const sessions = new Map();
 const active = new Map();
-const ready = chrome.storage.session.get(null).then(items => {
-  for (const [key, session] of Object.entries(items)) {
-    if (key.startsWith('tab:')) sessions.set(Number(key.slice(4)), session);
-  }
-});
+const PRESENT_STATUS = 'Present · retro skin';
+const FALLBACK_STATUS = 'Not online in 2000 · showing today';
+const isMode = value => value === 'archive' || value === 'present';
+// "archive" = real Wayback captures up to 2000. "present" = today's web in the Retro 95 skin.
+// Global for every Rewind tab, saved in chrome.storage.local under "rewindMode" (default
+// "archive"). It only decides NEW navigations: Back/Forward/reload replay entries as recorded.
+let mode = 'archive';
+const ready = Promise.all([
+  chrome.storage.session.get(null).then(items => {
+    for (const [key, session] of Object.entries(items)) {
+      if (key.startsWith('tab:')) sessions.set(Number(key.slice(4)), session);
+    }
+  }),
+  chrome.storage.local.get('rewindMode').then(({ rewindMode }) => {
+    if (isMode(rewindMode)) mode = rewindMode;
+  }),
+]);
+// True once sessions and mode are in memory. After that, committed() can decide about the
+// skin synchronously; it only has to wait when the worker has just woken up.
+let settled = false;
+void ready.then(() => { settled = true; });
+// tabId -> documentId that already got the skin at commit time (see committed()).
+const skinned = new Map();
 const toolbarCSS = fetch(chrome.runtime.getURL('toolbar.css')).then(response => response.text());
 const scripts = ['urls.js', 'ui.js', 'page.js'];
 
@@ -42,6 +60,9 @@ function stateFor(tabId, session) {
     tabId,
     canGoBack: session.index > 0,
     canGoForward: session.index < session.entries.length - 1,
+    mode,
+    // Archive mode found no capture up to the cutoff and opened the live page instead.
+    fallback: entry?.fallback === true,
   };
 }
 
@@ -52,6 +73,14 @@ function publish(tabId) {
   void chrome.tabs.sendMessage(tabId, data, { frameId: 0 }).catch(() => {});
   void chrome.runtime.sendMessage(data).catch(() => {});
 }
+
+// The mode is global but publish() reaches one tab, so every change of the saved
+// mode (from the toolbar, or any other writer) is pushed to all Rewind tabs here.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !('rewindMode' in changes)) return;
+  mode = isMode(changes.rewindMode.newValue) ? changes.rewindMode.newValue : 'archive';
+  void ready.then(() => { for (const tabId of sessions.keys()) publish(tabId); });
+});
 
 function rememberTab(tabId, session, page, historyTraversal) {
   const entries = session.entries;
@@ -72,20 +101,58 @@ function rememberTab(tabId, session, page, historyTraversal) {
   publish(tabId);
 }
 
+// The Retro 95 skin goes only on live pages (Present mode and "not online in 2000" fallbacks),
+// never on archive captures. Both calls are issued in the same turn, with no await between
+// them, so the stylesheet and the class that activates it land together. retro95.js guards
+// against a second run.
+function injectSkin(tabId, documentId) {
+  skinned.set(tabId, documentId);
+  const target = documentId ? { tabId, documentIds: [documentId] } : { tabId };
+  return Promise.all([
+    chrome.scripting.insertCSS({ target, files: ['skin/retro95.css'], origin: 'USER' }),
+    chrome.scripting.executeScript({ target, files: ['skin/retro95.js'], injectImmediately: true }),
+  ]).catch(() => {
+    if (skinned.get(tabId) === documentId) skinned.delete(tabId);
+  });
+}
+
+// True for a main-frame commit that must be skinned before its first paint: a Rewind tab opening
+// an http(s) page that is not an archive replay (this also excludes home.html, a
+// chrome-extension:// page), in Present mode or as the live page of an archive-mode fallback.
+// Synchronous on purpose: it only reads in-memory state.
+function shouldSkin(details) {
+  const session = sessions.get(details.tabId);
+  const url = session && RewindURLs.httpURL(details.url); // (archive.js already declares httpURL globally)
+  if (!url || url.host === 'web.archive.org') return false;
+  if (mode === 'present') return true;
+  // Archive mode: the live load that follows "no capture up to the cutoff" is a visit with no
+  // capture timestamp. Back/Forward/reload of a live page recorded earlier is skinned too.
+  const visit = active.get(details.tabId)?.visit;
+  if (visit && !visit.timestamp && matchesVisit(details, visit)) return true;
+  return session.entries.findLast(item => item.render === details.url)?.kind === 'live';
+}
+
+// End of navigate(): the toolbar. Skinned pages were already skinned at commit; the backstop
+// below only catches a live page that was not known to be live then (a page that navigated
+// itself in archive mode and turned out to have no capture).
 async function inject(tabId, documentId, kind) {
   const target = documentId ? { tabId, documentIds: [documentId] } : { tabId };
   try {
+    if (kind === 'live' && !(documentId && skinned.get(tabId) === documentId)) await injectSkin(tabId, documentId);
     await chrome.scripting.insertCSS({ target, files: ['page-layout.css'], origin: 'USER' });
     if (kind === 'archive') {
       await chrome.scripting.insertCSS({ target, files: ['archive-page.css'], origin: 'USER' });
-    }
-    if (kind === 'live') {
-      await chrome.scripting.insertCSS({ target, files: ['retro.css'], origin: 'USER' });
     }
     await chrome.scripting.executeScript({ target, files: scripts });
   } catch {
     // Restricted documents and tabs closed during navigation cannot host content scripts.
   }
+}
+
+function sameHost(first, second) {
+  const a = URL.parse(first);
+  const b = URL.parse(second);
+  return Boolean(a && b && a.hostname === b.hostname);
 }
 
 function stopRun(tabId) {
@@ -149,22 +216,29 @@ async function navigate(tabId, original, sourceDocument) {
   let replace = Boolean(sourceDocument);
   let page;
   let loaded;
+  // The mode is read once: a switch while this page loads only affects the next navigation.
+  const present = mode === 'present';
+  // Clicks inside a site that already had no capture up to the cutoff go straight to the
+  // live page: no pointless Wayback wait on every link (or SPA route) of e.g. discord.com.
+  const staysLive = !present && previous?.fallback === true && sameHost(previous.original, original.href);
   try {
-    setProgress(tabId, run, 'Looking up archived captures…');
-    try {
-      for await (const replay of findReplays(original.href, signal)) {
-        setProgress(tabId, run, 'Opening archived page…');
-        loaded = await visit(tabId, run, replay.render, replay.timestamp, replace);
-        signal.throwIfAborted();
-        replace = true;
-        if (loaded) {
-          const capture = readReplay(loaded.url);
-          page = { kind: 'archive', original: capture.original.href, status: captureLabel(capture.timestamp), render: loaded.url };
-          break;
+    if (!present && !staysLive) {
+      setProgress(tabId, run, 'Looking up archived captures…');
+      try {
+        for await (const replay of findReplays(original.href, signal)) {
+          setProgress(tabId, run, 'Opening archived page…');
+          loaded = await visit(tabId, run, replay.render, replay.timestamp, replace);
+          signal.throwIfAborted();
+          replace = true;
+          if (loaded) {
+            const capture = readReplay(loaded.url);
+            page = { kind: 'archive', original: capture.original.href, status: captureLabel(capture.timestamp), render: loaded.url };
+            break;
+          }
         }
+      } catch {
+        signal.throwIfAborted();
       }
-    } catch {
-      signal.throwIfAborted();
     }
     if (!page) {
       setProgress(tabId, run, 'Opening live page…');
@@ -174,7 +248,14 @@ async function navigate(tabId, original, sourceDocument) {
         : await visit(tabId, run, original.href, null, replace);
       signal.throwIfAborted();
       if (!loaded) throw new Error('The live page could not be loaded');
-      page = { kind: 'live', original: loaded.url, status: 'Live page · 1995 style', render: loaded.url };
+      // kind and fallback are stored on the entry so Back/Forward restore them as recorded.
+      page = {
+        kind: 'live',
+        original: loaded.url,
+        status: present ? PRESENT_STATUS : FALLBACK_STATUS,
+        render: loaded.url,
+        fallback: !present,
+      };
     }
     const tab = await chrome.tabs.get(tabId);
     signal.throwIfAborted();
@@ -208,6 +289,10 @@ function finishReplay(details, pending) {
 
 async function committed(details) {
   if (details.frameId !== 0 || !details.documentId) return;
+  if (!settled) await ready; // only right after the worker woke up
+  // Skin first, before any other await: the page has not painted yet, so the skin is in place
+  // for its first frame. Waiting for navigate() (tabs.get, rememberTab, ...) would paint plain.
+  if (shouldSkin(details)) void injectSkin(details.tabId, details.documentId);
   await ready;
   const tabId = details.tabId;
   const session = sessions.get(tabId);
@@ -342,6 +427,7 @@ async function publishFullscreen(window) {
 chrome.windows.onBoundsChanged.addListener(window => void publishFullscreen(window).catch(() => {}));
 
 chrome.tabs.onRemoved.addListener(async tabId => {
+  skinned.delete(tabId);
   await ready;
   if (!sessions.delete(tabId)) return;
   stopRun(tabId);
@@ -374,6 +460,15 @@ async function onMessage(message, sender) {
       void publishFullscreen(updated).catch(() => {});
       return updated.state;
     }
+    case 'mode': {
+      if (!isMode(message.mode)) return stateFor(tabId, session);
+      mode = message.mode;
+      // Saved in storage (not just memory): survives the worker sleeping, and the listener
+      // above then publishes the new state to every Rewind tab.
+      await chrome.storage.local.set({ rewindMode: mode });
+      publish(tabId);
+      return stateFor(tabId, session);
+    }
     case 'history':
       return readHistory();
     case 'clear':
@@ -398,7 +493,15 @@ async function onMessage(message, sender) {
       } else if (!/^[a-z][a-z+.-]*:\/\//i.test(value)) {
         stopRun(tabId);
         await rememberSearch(value);
-        await chrome.tabs.update(tabId, { url: `${homeURL}?q=${encodeURIComponent(value)}` });
+        if (mode === 'present') {
+          // Today's Google results as a live, skinned page. Result clicks go through
+          // destination() in page.js and open as Present pages with no Wayback lookup.
+          const search = new URL('https://www.google.com/search');
+          search.searchParams.set('q', value);
+          void navigate(tabId, search).catch(console.warn);
+        } else {
+          await chrome.tabs.update(tabId, { url: `${homeURL}?q=${encodeURIComponent(value)}` });
+        }
       }
       break;
     }

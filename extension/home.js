@@ -1,12 +1,24 @@
 const { mount, send, matches } = RewindUI;
 const workspace = document.querySelector('#workspace');
 let searchView;
+let startView;
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
   if (text) node.textContent = text;
   if (className) node.className = className;
   return node;
+}
+
+// A Retro 95 window: navy title bar plus a body. The title bar is decoration only (the page's
+// own headings carry the meaning), so it is hidden from assistive technology.
+function windowFrame(className, title) {
+  const frame = element('section', '', `window ${className}`);
+  const titlebar = element('div', title, 'window-titlebar');
+  titlebar.setAttribute('aria-hidden', 'true');
+  const body = element('div', '', 'window-body');
+  frame.append(titlebar, body);
+  return { frame, body };
 }
 
 function link(label, url) {
@@ -20,36 +32,109 @@ function link(label, url) {
   return result;
 }
 
+function searchForm(id, query = '') {
+  const form = element('form', '', 'page-search');
+  form.setAttribute('role', 'search');
+  const label = element('label', 'Search the web');
+  label.htmlFor = id;
+  const field = element('input');
+  field.id = id;
+  field.type = 'search';
+  field.value = query;
+  field.autocomplete = 'off';
+  if (id === 'start-search') field.placeholder = 'Search the web or enter an address';
+  const submit = element('button', 'Search');
+  submit.type = 'submit';
+  form.append(label, field, submit);
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const value = field.value.trim();
+    if (value) void send('submit', { value });
+  });
+  return form;
+}
+
+function googleLogo() {
+  const logo = element('img', '', 'google-logo');
+  logo.src = 'google-classic.png';
+  logo.alt = 'Google';
+  logo.width = 1192;
+  logo.height = 432;
+  return logo;
+}
+
+function createStartView(present) {
+  const { frame: panel, body } = windowFrame('start-page', 'Rewind');
+  const wordmark = element('h1', '', 'start-wordmark');
+  wordmark.append(googleLogo());
+  const links = present ? [
+    ['Wikipedia', 'https://en.wikipedia.org/', 'en.wikipedia.org'],
+    ['Hacker News', 'https://news.ycombinator.com/', 'news.ycombinator.com'],
+    ['Discord', 'https://discord.com/', 'discord.com'],
+  ] : [
+    ['BBC', 'http://www.bbcnc.org.uk/index.html', 'March 1995'],
+    ['Stanford Google prototype', 'http://google.stanford.edu/', '11 Nov 1998'],
+    ['Google homepage', 'http://www.google.com/index.html', '1 Oct 1999'],
+  ];
+  const list = element('ul', '', 'start-shortcuts');
+  for (const [title, url, details] of links) {
+    const row = element('li');
+    const shortcut = link(title, url);
+    shortcut.append(element('small', details));
+    row.append(shortcut);
+    list.append(row);
+  }
+  body.append(wordmark);
+  if (present) body.append(element('h2', 'Today, the 2000 way', 'start-mode'));
+  body.append(
+    searchForm('start-search'),
+    element('h2', present ? 'Live shortcuts' : 'Archived shortcuts'),
+    list,
+  );
+  return { present, panel };
+}
+
 function resultRow({ title, url, description, direct }, location) {
   const row = element('li', '', 'result');
   if (direct) row.dataset.direct = 'true';
-  row.append(link(title || url, url), element('small', location || url));
+  row.append(link(title || url, url));
   if (description) row.append(element('p', description));
+  row.append(element('small', location || url));
   return row;
 }
 
 function createSearchView(query) {
   const controller = new AbortController();
-  const panel = element('section', '', 'panel results');
+  const { frame: panel, body } = windowFrame('results', 'Search Results - Rewind');
+  const header = element('header', '', 'search-header');
+  header.append(googleLogo(), searchForm('results-search', query));
+  const summary = element('div', '', 'search-summary');
+  const heading = element('h1', `Web search for “${query}”`);
+  const count = element('span');
+  count.setAttribute('role', 'status');
+  summary.append(heading, count);
   const status = element('p', '', 'search-status');
   status.setAttribute('role', 'status');
   const web = element('section');
   web.setAttribute('aria-label', 'Web results');
   const local = element('section', '', 'history-results');
-  const content = element('div', '', 'search-content');
-  content.append(element('h1', 'Search results'), element('p', `for “${query}”`, 'search-query'), status, web, local);
-  panel.append(element('div', 'Search Results - Rewind', 'search-titlebar'), content);
+  body.append(header, summary, status, web, local);
 
   async function load() {
+    count.textContent = '';
+    status.dataset.state = 'loading';
     status.textContent = 'Searching the web…';
+    web.setAttribute('aria-busy', 'true');
     web.replaceChildren();
     try {
       const { results, provider, source } = await searchWeb(query, controller.signal);
       if (controller.signal.aborted) return;
+      status.dataset.state = results.length ? 'ready' : 'empty';
       status.textContent = results.length ? '' : 'No web results found. Try a different search.';
       if (results.length) {
+        count.textContent = `${results.length} ${results.length === 1 ? 'result' : 'results'}`;
         const list = element('ul', '', 'result-list');
-        for (const result of results) list.append(resultRow(result, new URL(result.url).host));
+        for (const result of results) list.append(resultRow(result));
         const attribution = element('p', '', 'search-source');
         const providerLink = element('a', provider, 'link');
         providerLink.href = source;
@@ -59,11 +144,14 @@ function createSearchView(query) {
     } catch (error) {
       if (controller.signal.aborted) return;
       console.warn('[Rewind search]', error);
+      status.dataset.state = 'error';
       status.textContent = 'Web search is unavailable right now.';
       const retry = element('button', 'Try again', 'search-retry');
       retry.type = 'button';
       retry.addEventListener('click', () => void load());
       web.append(retry);
+    } finally {
+      web.removeAttribute('aria-busy');
     }
   }
 
@@ -72,8 +160,10 @@ function createSearchView(query) {
 }
 
 function render(state, history) {
-  const live = state.mode === 'live';
-  if (state.kind === 'search' && !live) {
+  // A missing state.mode (worker without the mode contract) means archive.
+  const present = state.mode === 'present';
+  if (state.kind === 'search' && !present) {
+    startView = undefined;
     const query = state.original;
     if (searchView?.query !== query) {
       searchView?.controller.abort();
@@ -92,34 +182,28 @@ function render(state, history) {
 
   searchView?.controller.abort();
   searchView = undefined;
-  const panel = element('section', '', 'panel');
-  if (state.kind === 'error') {
-    panel.append(element('h1', 'Could not open page'), element('p', 'Check the address or connection and try again.'));
-  } else if (state.kind === 'search') {
-    panel.append(element('p', 'Search again to use 2026 search.'));
-  } else {
-    panel.append(element('h1', live ? '2026, the 2000 way' : 'Browse the early web'));
-    panel.append(element('p', 'Enter a web address or search the web.'));
-    const demo = element('p', 'Try ', 'demo');
-    if (live) {
-      demo.append(
-        link('Wikipedia', 'https://en.wikipedia.org/'), ', ',
-        link('Hacker News', 'https://news.ycombinator.com/'), ', or ',
-        link('Discord', 'https://discord.com/'), '.',
-      );
-    } else {
-      demo.append(
-        link('BBC 1995', 'http://www.bbcnc.org.uk/index.html'), ', ',
-        link('Stanford Google', 'http://google.stanford.edu/'), ', ',
-        link('Yahoo!', 'http://www.yahoo.com/'), ', or ',
-        link('Space Jam', 'http://www.spacejam.com/'), '.',
-      );
+  if (state.kind === 'start') {
+    if (startView?.present !== present) {
+      const typed = workspace.querySelector('#start-search')?.value;
+      startView = createStartView(present);
+      workspace.replaceChildren(startView.panel);
+      if (typed) workspace.querySelector('#start-search').value = typed;
     }
-    panel.append(demo);
+    return;
+  }
+
+  startView = undefined;
+  const { frame: panel, body } = windowFrame('panel', state.kind === 'error' ? 'Error - Rewind' : 'Search Results - Rewind');
+  if (state.kind === 'error') {
+    body.append(element('h1', 'Could not open page'), element('p', 'Check the address or connection and try again.'));
+  } else if (state.kind === 'search') {
+    body.append(element('p', 'Search again to use Present search.'));
   }
   workspace.replaceChildren(panel);
 }
 
 void send('init').then(initial => {
-  if (initial) mount(document.querySelector('#chrome'), initial, { render, startFocused: initial.state.kind !== 'search' });
+  if (!initial) return;
+  mount(document.querySelector('#chrome'), initial, { render });
+  workspace.querySelector('#start-search')?.focus();
 });
