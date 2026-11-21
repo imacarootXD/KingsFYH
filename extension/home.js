@@ -10,6 +10,17 @@ function element(tag, text, className) {
   return node;
 }
 
+// A Retro 95 window: navy title bar plus a body. The title bar is decoration only (the page's
+// own headings carry the meaning), so it is hidden from assistive technology.
+function windowFrame(className, title) {
+  const frame = element('section', '', `window ${className}`);
+  const titlebar = element('div', title, 'window-titlebar');
+  titlebar.setAttribute('aria-hidden', 'true');
+  const body = element('div', '', 'window-body');
+  frame.append(titlebar, body);
+  return { frame, body };
+}
+
 function link(label, url) {
   const result = element('a', label, 'link');
   result.href = url;
@@ -53,7 +64,7 @@ function googleLogo() {
 }
 
 function createStartView(present) {
-  const panel = element('section', '', 'start-page');
+  const { frame: panel, body } = windowFrame('start-page', 'Rewind');
   const wordmark = element('h1', '', 'start-wordmark');
   wordmark.append(googleLogo());
   const links = present ? [
@@ -73,9 +84,9 @@ function createStartView(present) {
     row.append(shortcut);
     list.append(row);
   }
-  panel.append(wordmark);
-  if (present) panel.append(element('h2', 'Today, the 2000 way', 'start-mode'));
-  panel.append(
+  body.append(wordmark);
+  if (present) body.append(element('h2', 'Today, the 2000 way', 'start-mode'));
+  body.append(
     searchForm('start-search'),
     element('h2', present ? 'Live shortcuts' : 'Archived shortcuts'),
     list,
@@ -94,7 +105,7 @@ function resultRow({ title, url, description, direct }, location) {
 
 function createSearchView(query) {
   const controller = new AbortController();
-  const panel = element('section', '', 'results');
+  const { frame: panel, body } = windowFrame('results', 'Search Results - Rewind');
   const header = element('header', '', 'search-header');
   header.append(googleLogo(), searchForm('results-search', query));
   const summary = element('div', '', 'search-summary');
@@ -107,7 +118,7 @@ function createSearchView(query) {
   const web = element('section');
   web.setAttribute('aria-label', 'Web results');
   const local = element('section', '', 'history-results');
-  panel.append(header, summary, status, web, local);
+  body.append(header, summary, status, web, local);
 
   async function load() {
     count.textContent = '';
@@ -151,7 +162,6 @@ function createSearchView(query) {
 function render(state, history) {
   // A missing state.mode (worker without the mode contract) means archive.
   const present = state.mode === 'present';
-  workspace.classList.toggle('classic-search-workspace', state.kind === 'start' || (state.kind === 'search' && !present));
   if (state.kind === 'search' && !present) {
     startView = undefined;
     const query = state.original;
@@ -183,11 +193,11 @@ function render(state, history) {
   }
 
   startView = undefined;
-  const panel = element('section', '', 'panel');
+  const { frame: panel, body } = windowFrame('panel', state.kind === 'error' ? 'Error - Rewind' : 'Search Results - Rewind');
   if (state.kind === 'error') {
-    panel.append(element('h1', 'Could not open page'), element('p', 'Check the address or connection and try again.'));
+    body.append(element('h1', 'Could not open page'), element('p', 'Check the address or connection and try again.'));
   } else if (state.kind === 'search') {
-    panel.append(element('p', 'Search again to use Present search.'));
+    body.append(element('p', 'Search again to use Present search.'));
   }
   workspace.replaceChildren(panel);
 }

@@ -1,0 +1,296 @@
+/* Rewind's own pages (start, search results, error), in the Retro 95 look that Present mode
+   puts on live pages: teal desktop, grey windows with a navy title bar, bevelled 3D edges,
+   sunken white lists, raised buttons, Tahoma 13px, black text, classic link colours, no
+   rounded corners. Present and 2000 mode use the same components; only the content differs.
+
+   Only home.html loads this file. The toolbar's rules stay in toolbar.css (the toolbar is also
+   injected into every page), and nothing here may touch .toolbar. Bevel recipe: a 1px border
+   for the outer edge plus an inset box-shadow for the inner edge = classic 2px bevel. */
+
+/* Same specificity as the :root rule in toolbar.css, and loaded after it. */
+:root { background: #008080; }
+
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------- Desktop ---------- */
+.workspace {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: auto;
+  background: #008080;
+  color: #000;
+  font: 13px/1.35 Tahoma, "MS Sans Serif", Arial, sans-serif;
+}
+
+/* ---------- Window: grey face, 3D edge, navy title bar ---------- */
+.window {
+  width: min(100%, 560px);
+  align-self: start;
+  padding: 2px;
+  background: #c0c0c0;
+  border: 1px solid;
+  border-color: #dfdfdf #000 #000 #dfdfdf;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080;
+}
+
+.window-titlebar {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.window-body { padding: 14px 16px 18px; }
+
+.start-page { margin-top: clamp(0px, 5vh, 48px); }
+.results { width: min(100%, 940px); min-width: 0; }
+.panel { width: min(100%, 490px); }
+
+/* ---------- Links ---------- */
+.link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0000ee;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:visited { color: #551a8b; }
+.link:focus-visible { outline: 1px dotted #000; outline-offset: 1px; }
+
+/* ---------- Logo ---------- */
+.google-logo {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.start-wordmark { margin: 0; }
+
+.start-wordmark .google-logo {
+  width: min(100%, 280px);
+  margin-inline: auto;
+}
+
+/* ---------- Search form: sunken field, raised button ---------- */
+.page-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 8px;
+  margin: 16px 0;
+}
+
+.page-search label {
+  grid-column: 1 / -1;
+  font-weight: bold;
+}
+
+.page-search input {
+  min-width: 0;
+  min-height: 30px;
+  padding: 3px 6px;
+  background: #fff;
+  color: #000;
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf;
+}
+
+.page-search input::placeholder { color: #808080; }
+
+.page-search input:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
+}
+
+.page-search button, .search-retry {
+  min-height: 29px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 15px;
+  background: #c0c0c0;
+  color: #000;
+  font-weight: bold;
+  border: 1px solid;
+  border-color: #fff #000 #000 #fff;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf;
+}
+
+.page-search button:active, .search-retry:active {
+  border-color: #000 #fff #fff #000;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #dfdfdf;
+}
+
+/* ---------- Start page ---------- */
+.start-page .window-body { text-align: center; }
+.start-page .page-search { margin: 18px 0 22px; }
+.start-page .page-search label { text-align: start; }
+
+.start-page h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.start-page .start-mode {
+  margin: 10px 0 0;
+  font-size: 15px;
+}
+
+.start-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.start-shortcuts .link {
+  display: block;
+  padding: 8px 10px;
+  background: #c0c0c0;
+  border: 1px solid;
+  border-color: #fff #000 #000 #fff;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf;
+  overflow-wrap: anywhere;
+}
+
+.start-shortcuts .link:active {
+  border-color: #000 #fff #fff #000;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #dfdfdf;
+}
+
+.start-shortcuts small {
+  display: block;
+  margin-top: 3px;
+  color: #000;
+  font-size: 11px;
+}
+
+/* ---------- Search results ---------- */
+.search-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  margin-bottom: 12px;
+}
+
+.search-header .google-logo { width: clamp(96px, 13vw, 140px); }
+
+.search-header .page-search {
+  flex: 1 1 252px;
+  max-width: 560px;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Count line: a sunken status strip. */
+.search-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
+  padding: 4px 8px;
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+}
+
+.search-summary h1 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.results .search-status:not(:empty) {
+  margin: 10px 0;
+  padding: 6px 8px;
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  border-left: 4px solid #808080;
+}
+
+.results .search-status[data-state='loading'] { border-left-color: #000080; }
+.results .search-status[data-state='error'] { border-left-color: #aa201d; }
+
+.results h2 {
+  margin: 16px 0 6px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* The list itself is the sunken white field. */
+.result-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  background: #fff;
+  color: #000;
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf;
+}
+
+.result {
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+}
+
+.result:last-child { margin-bottom: 0; }
+.result > a { font-size: 14px; }
+.result > a:focus-visible { outline: 1px dotted #000; outline-offset: 2px; }
+
+.result small {
+  display: block;
+  margin-top: 3px;
+  color: #000;
+  font-size: 12px;
+}
+
+.result p {
+  margin: 3px 0 0;
+  line-height: 1.4;
+}
+
+.results .search-source {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+/* ---------- Message and error window ---------- */
+.panel h1 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.panel p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+@media (max-width: 540px) {
+  .workspace { padding: 10px; }
+  .window-body { padding: 10px 10px 14px; }
+  .start-page { margin-top: 0; }
+}
